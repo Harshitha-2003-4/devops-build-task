@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_HUB_USERNAME = 'manjunathdc'
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') // Ensure this matches the credential ID
         IMAGE_NAME = 'devops-app'
     }
 
@@ -37,13 +37,26 @@ pipeline {
                         // Load the SSH key from Jenkins credentials
                         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                             sh '''
+                                echo "SSH Key Path: $SSH_KEY"
+                                ls -l $SSH_KEY
                                 chmod 600 $SSH_KEY
                                 ./deploy.sh
                             '''
                         }
+                    } else {
+                        echo "Skipping deployment for branch: ${env.BRANCH_NAME}"
                     }
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed. Check the logs for details."
         }
     }
 }
