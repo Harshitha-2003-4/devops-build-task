@@ -33,7 +33,6 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'master') {
                         sh './deploy.sh'
                     }
                 }
