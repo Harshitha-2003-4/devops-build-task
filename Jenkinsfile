@@ -33,8 +33,7 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                        sh './deploy.sh'
-                    }
+                    sh './deploy.sh'
                 }
             }
         }
