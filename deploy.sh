@@ -4,8 +4,8 @@
 DOCKER_HUB_USERNAME="manjunathdc"
 IMAGE_NAME="devops-app"
 TAG="dev"
-SERVER_IP="your_server_ip"
-SSH_KEY="path_to_your_ssh_key"
+SERVER_IP="35.85.155.237"
+SSH_KEY="oregon-test.pem"
 
 # SSH into the server and deploy the application
 echo "Deploying application to server..."
