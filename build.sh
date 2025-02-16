@@ -13,9 +13,9 @@ docker build -t $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG .
 echo "Tagging image for dev repository..."
 docker tag $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG $DOCKER_HUB_USERNAME/$IMAGE_NAME:dev
 
-# Login to Docker Hub
+# Login to Docker Hub using Jenkins credentials
 echo "Logging in to Docker Hub..."
-docker login -u $DOCKER_HUB_USERNAME
+echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
 
 # Push the image to Docker Hub
 echo "Pushing image to Docker Hub..."
