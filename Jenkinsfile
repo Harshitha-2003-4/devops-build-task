@@ -33,12 +33,13 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                    if (env.BRANCH_NAME == 'master') {
-                        // Load the SSH key from Jenkins credentials
+                    def branch = env.BRANCH_NAME ?: env.GIT_BRANCH ?: 'unknown'
+                    if (branch == 'master') {
                         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                             sh '''
+                                echo "Deploying to server..."
                                 chmod 600 $SSH_KEY
-                                ./deploy.sh
+                                ssh -o StrictHostKeyChecking=no -i $SSH_KEY ec2-user@your-server-ip "bash -s" < ./deploy.sh
                             '''
                         }
                     }
