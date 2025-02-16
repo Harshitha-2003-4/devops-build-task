@@ -10,6 +10,8 @@ SSH_KEY="path_to_your_ssh_key"
 # SSH into the server and deploy the application
 echo "Deploying application to server..."
 ssh -i $SSH_KEY ubuntu@$SERVER_IP << EOF
+    sudo apt update
+    sudo apt upgrade
     # Pull the latest Docker image
     echo "Pulling the latest Docker image..."
     docker pull $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
