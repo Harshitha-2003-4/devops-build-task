@@ -7,11 +7,15 @@ TAG="dev"
 SERVER_IP="35.95.23.135"
 
 # Jenkins provides the SSH key as an environment variable
-SSH_KEY="$JENKINS_HOME/.ssh/id_rsa"  # Path to the SSH key provided by Jenkins
+SSH_KEY="$SSH_KEY"  # Path to the SSH key provided by Jenkins
+
+# Log the SSH key path
+echo "Using SSH key: $SSH_KEY"
 
 # SSH into the server and deploy the application
 echo "Deploying application to server..."
-ssh -i $SSH_KEY ubuntu@$SERVER_IP << EOF
+ssh -i "$SSH_KEY" ubuntu@$SERVER_IP << EOF
+    echo "Updating system packages..."
     sudo apt update -y
     sudo apt upgrade -y
 
