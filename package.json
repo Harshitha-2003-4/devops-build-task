@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js", 
+    "build": "react-scripts build"
   },
   "repository": {
     "type": "git",
@@ -17,5 +19,8 @@
     "url": "https://github.com/manjunath-start/devops-build-task/issues"
   },
   "homepage": "https://github.com/manjunath-start/devops-build-task#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "react-scripts": "^5.0.1"
+  }
 }
