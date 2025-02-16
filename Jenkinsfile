@@ -3,11 +3,20 @@ pipeline {
 
     environment {
         DOCKER_HUB_USERNAME = 'manjunathdc'
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') // Ensure this matches the credential ID
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
     }
 
     stages {
+        stage('Get Branch Name') {
+            steps {
+                script {
+                    BRANCH_NAME = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
+                    echo "Building branch: ${BRANCH_NAME}"
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 script {
@@ -34,7 +43,6 @@ pipeline {
             steps {
                 script {
                     if (BRANCH_NAME == 'master') {
-                        // Load the SSH key from Jenkins credentials
                         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                             sh '''
                                 echo "SSH Key Path: $SSH_KEY"
