@@ -33,7 +33,15 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                    sh './deploy.sh'
+                    if (env.BRANCH_NAME == 'master') {
+                        // Load the SSH key from Jenkins credentials
+                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                            sh '''
+                                chmod 600 $SSH_KEY
+                                ./deploy.sh
+                            '''
+                        }
+                    }
                 }
             }
         }

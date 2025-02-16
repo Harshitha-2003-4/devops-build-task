@@ -5,13 +5,16 @@ DOCKER_HUB_USERNAME="manjunathdc"
 IMAGE_NAME="devops-app"
 TAG="dev"
 SERVER_IP="35.95.23.135"
-SSH_KEY="oregon-test.pem"
+
+# Jenkins provides the SSH key as an environment variable
+SSH_KEY="$JENKINS_HOME/.ssh/id_rsa"  # Path to the SSH key provided by Jenkins
 
 # SSH into the server and deploy the application
 echo "Deploying application to server..."
 ssh -i $SSH_KEY ubuntu@$SERVER_IP << EOF
-    sudo apt update
-    sudo apt upgrade
+    sudo apt update -y
+    sudo apt upgrade -y
+
     # Pull the latest Docker image
     echo "Pulling the latest Docker image..."
     docker pull $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
@@ -27,3 +30,7 @@ ssh -i $SSH_KEY ubuntu@$SERVER_IP << EOF
 
     echo "Deployment completed successfully."
 EOF
+
+# Check if the container is running
+echo "Verifying container status..."
+ssh -i "$SSH_KEY" ubuntu@$SERVER_IP "docker ps -a | grep $IMAGE_NAME"
