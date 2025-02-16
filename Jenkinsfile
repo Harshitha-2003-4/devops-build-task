@@ -3,20 +3,11 @@ pipeline {
 
     environment {
         DOCKER_HUB_USERNAME = 'manjunathdc'
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') // Ensure this matches the credential ID
         IMAGE_NAME = 'devops-app'
     }
 
     stages {
-        stage('Get Branch Name') {
-            steps {
-                script {
-                    BRANCH_NAME = sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                    echo "Building branch: ${BRANCH_NAME}"
-                }
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -28,10 +19,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    if (BRANCH_NAME == 'dev') {
+                    if (env.BRANCH_NAME == 'dev') {
                         sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
                         sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
-                    } else if (BRANCH_NAME == 'master') {
+                    } else if (env.BRANCH_NAME == 'master') {
                         sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
                         sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
                     }
@@ -42,7 +33,8 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                    if (BRANCH_NAME == 'master') {
+                    if (env.BRANCH_NAME == 'master') {
+                        // Load the SSH key from Jenkins credentials
                         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                             sh '''
                                 echo "SSH Key Path: $SSH_KEY"
@@ -52,7 +44,7 @@ pipeline {
                             '''
                         }
                     } else {
-                        echo "Skipping deployment for branch: ${BRANCH_NAME}"
+                        echo "Skipping deployment for branch: ${env.BRANCH_NAME}"
                     }
                 }
             }
