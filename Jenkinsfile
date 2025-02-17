@@ -2,18 +2,16 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'manjunathdc'
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
-        IMAGE_NAME = 'devops-app'
+        DOCKER_HUB_USERNAME = 'manjunathdc' // Replace with your Docker Hub username
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') // Ensure this matches the credential ID in Jenkins
+        IMAGE_NAME = 'devops-app' // Replace with your Docker image name
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Debug Branch Name') {
             steps {
-                checkout scm
                 script {
-                    BRANCH_NAME = env.GIT_BRANCH ?: sh(script: "git rev-parse --abbrev-ref HEAD", returnStdout: true).trim()
-                    echo "Building branch: ${BRANCH_NAME}"
+                    echo "Branch Name: ${BRANCH_NAME}"
                 }
             }
         }
@@ -29,31 +27,34 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('', DOCKER_HUB_CREDENTIALS) {
-                        if (BRANCH_NAME == 'origin/dev' || BRANCH_NAME == 'dev') {
-                            sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
-                            sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
-                        } else if (BRANCH_NAME == 'origin/master' || BRANCH_NAME == 'master') {
-                            sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
-                            sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
-                        }
+                    if (BRANCH_NAME == 'dev') {
+                        // Push to the dev repository in Docker Hub
+                        sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
+                        sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
+                    } else if (BRANCH_NAME == 'master') {
+                        // Push to the prod repository in Docker Hub
+                        sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
+                        sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
                     }
                 }
             }
         }
 
         stage('Deploy to Server') {
-            when {
-                branch 'master'
-            }
             steps {
                 script {
-                    withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                        sh '''
-                            echo "SSH Key Path: $SSH_KEY"
-                            chmod 600 $SSH_KEY
-                            ./deploy.sh
-                        '''
+                    if (BRANCH_NAME == 'master') {
+                        // Load the SSH key from Jenkins credentials
+                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                            sh '''
+                                echo "SSH Key Path: $SSH_KEY"
+                                ls -l $SSH_KEY
+                                chmod 600 $SSH_KEY
+                                ./deploy.sh
+                            '''
+                        }
+                    } else {
+                        echo "Skipping deployment for branch: ${BRANCH_NAME}"
                     }
                 }
             }
