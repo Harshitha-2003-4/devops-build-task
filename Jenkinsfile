@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'manjunathdc' 
-        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials') 
+        DOCKER_HUB_USERNAME = 'manjunathdc'
+        DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
     }
 

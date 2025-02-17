@@ -31,16 +31,20 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << EOF
 
     # Stop and remove the existing container if it exists
     echo "Stopping and removing existing container..."
-    docker stop $IMAGE_NAME || true
-    docker rm $IMAGE_NAME || true
+    if docker ps -a --format '{{.Names}}' | grep -q '^devops-app$'; then
+        docker stop devops-app || true
+        docker rm devops-app || true
+    else
+        echo "No existing container named 'devops-app' found."
+    fi
 
     # Run the new container
     echo "Starting new container..."
-    docker run -d -p 80:80 --name $IMAGE_NAME $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
+    docker run -d -p 80:80 --name devops-app $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
 
     echo "Deployment completed successfully."
 EOF
 
 # Check if the container is running
 echo "Verifying container status..."
-ssh -i "$SSH_KEY" ubuntu@$SERVER_IP "docker ps -a | grep $IMAGE_NAME"
+ssh -i "$SSH_KEY" ubuntu@$SERVER_IP "docker ps -a | grep devops-app"
