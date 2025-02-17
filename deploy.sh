@@ -4,7 +4,7 @@
 DOCKER_HUB_USERNAME="manjunathdc"
 IMAGE_NAME="devops-app"
 TAG="dev"
-SERVER_IP="35.94.110.110"
+SERVER_IP="54.212.193.102"
 
 # Jenkins provides the SSH key as an environment variable
 SSH_KEY="$SSH_KEY"  # Path to the SSH key provided by Jenkins
