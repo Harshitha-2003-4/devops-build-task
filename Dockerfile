@@ -9,6 +9,9 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
+# Explicitly copy server.js
+COPY server.js /app/
+
 # Copy the rest of the application code
 COPY . .
 
