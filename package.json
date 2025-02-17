@@ -1,26 +1,15 @@
 {
   "name": "devops-build",
   "version": "1.0.0",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js", 
-    "build": "react-scripts build"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/manjunath-start/devops-build-task.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/manjunath-start/devops-build-task/issues"
-  },
-  "homepage": "https://github.com/manjunath-start/devops-build-task#readme",
-  "description": "",
-  "devDependencies": {
-    "react-scripts": "^5.0.1"
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "4.0.3"
   }
 }
