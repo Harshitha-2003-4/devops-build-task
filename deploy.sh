@@ -6,7 +6,7 @@ IMAGE_NAME="devops-app"
 TAG="dev"
 SERVER_IP="54.212.193.102"
 
-# Jenkins provides the SSH key as an environment variable
+# Jenkins provides the SSH key as an environment
 SSH_KEY="$SSH_KEY"  # Path to the SSH key provided by Jenkins
 
 # Log the SSH key path
