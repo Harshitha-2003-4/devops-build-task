@@ -5,7 +5,7 @@ pipeline {
         DOCKER_HUB_USERNAME = 'manjunathdc'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
-        GITHUB_CREDENTIALS = credentials('github-token') // Add GitHub credentials
+        GITHUB_CREDENTIALS = credentials('github-token')
     }
 
     stages {
