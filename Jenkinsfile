@@ -2,17 +2,21 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'manjunathdc'
+        DOCKER_HUB_USERNAME = 'Harshithaa2003'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
         GITHUB_CREDENTIALS = credentials('github-token')
     }
 
     stages {
-        stage('Debug Branch Name') {
+        stage('Detect Branch') {
             steps {
                 script {
-                    echo "Branch Name: ${BRANCH_NAME}"
+                    env.ACTUAL_BRANCH_NAME = env.BRANCH_NAME ?: sh(
+                        script: "git rev-parse --abbrev-ref HEAD",
+                        returnStdout: true
+                    ).trim()
+                    echo "🔍 Branch Name: ${env.ACTUAL_BRANCH_NAME}"
                 }
             }
         }
@@ -20,38 +24,30 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh './build.sh'
+                    sh "./build.sh ${env.ACTUAL_BRANCH_NAME}"
                 }
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    if (BRANCH_NAME == 'dev') {
-                        sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
-                        sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:dev"
-                    } else if (BRANCH_NAME == 'master') {
-                        sh "docker tag ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:latest ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
-                        sh "docker push ${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:prod"
-                    }
-                }
+                echo "✅ Image already pushed during build.sh"
             }
         }
 
         stage('Deploy to Server') {
             steps {
                 script {
-                    if (BRANCH_NAME == 'master') {
+                    def branch = env.ACTUAL_BRANCH_NAME
+                    if (branch == 'master') {
                         withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
-                            sh '''
-                                echo "SSH Key Path: $SSH_KEY"
-                                chmod 600 $SSH_KEY
-                                ./deploy.sh
-                            '''
+                            sh """
+                                chmod 600 \$SSH_KEY
+                                ./deploy.sh prod
+                            """
                         }
                     } else {
-                        echo "Skipping deployment for branch: ${BRANCH_NAME}"
+                        echo "🟡 Skipping deployment for branch: ${branch}"
                     }
                 }
             }
@@ -60,10 +56,10 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed successfully!"
+            echo "✅ Pipeline completed successfully!"
         }
         failure {
-            echo "Pipeline failed. Check the logs for details."
+            echo "❌ Pipeline failed. Check the logs."
         }
     }
 }
