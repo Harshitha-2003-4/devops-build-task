@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'Harshithaa2003'
+        DOCKER_HUB_USERNAME = 'harshithaa2003' // 🔥 use lowercase username as tested
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
         GITHUB_CREDENTIALS = credentials('github-token')
@@ -12,8 +12,7 @@ pipeline {
         stage('Detect Branch') {
             steps {
                 script {
-                    // Force master for now to avoid "HEAD" issues
-                    env.ACTUAL_BRANCH_NAME = 'master'
+                    env.ACTUAL_BRANCH_NAME = 'master' // or detect dynamically if needed
                     echo "🔍 Branch Name: ${env.ACTUAL_BRANCH_NAME}"
                 }
             }
@@ -22,13 +21,17 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 withCredentials([
-                    usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_CREDENTIALS_USR', passwordVariable: 'DOCKER_HUB_CREDENTIALS_PSW')
+                    usernamePassword(
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKER_HUB_CREDENTIALS_USR',
+                        passwordVariable: 'DOCKER_HUB_CREDENTIALS_PSW'
+                    )
                 ]) {
-                    sh """
-                        export DOCKER_HUB_CREDENTIALS_USR=\$DOCKER_HUB_CREDENTIALS_USR
-                        export DOCKER_HUB_CREDENTIALS_PSW=\$DOCKER_HUB_CREDENTIALS_PSW
-                        ./build.sh \${ACTUAL_BRANCH_NAME}
-                    """
+                    sh '''
+                        export DOCKER_HUB_CREDENTIALS_USR=$DOCKER_HUB_CREDENTIALS_USR
+                        export DOCKER_HUB_CREDENTIALS_PSW=$DOCKER_HUB_CREDENTIALS_PSW
+                        ./build.sh master
+                    '''
                 }
             }
         }
@@ -36,21 +39,28 @@ pipeline {
         stage('Deploy to Server') {
             steps {
                 script {
-                    def branch = env.ACTUAL_BRANCH_NAME
-                    if (branch == 'master') {
+                    if (env.ACTUAL_BRANCH_NAME == 'master') {
                         withCredentials([
-                            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
-                            usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')
+                            sshUserPrivateKey(
+                                credentialsId: 'ec2-ssh-key',
+                                keyFileVariable: 'SSH_KEY'
+                            ),
+                            usernamePassword(
+                                credentialsId: 'docker-hub-credentials',
+                                usernameVariable: 'DOCKER_HUB_USERNAME',
+                                passwordVariable: 'DOCKER_HUB_PASSWORD'
+                            )
                         ]) {
-                            sh """
-                                chmod 600 \$SSH_KEY
-                                DOCKER_HUB_USERNAME=\$DOCKER_HUB_USERNAME \\
-                                DOCKER_HUB_PASSWORD=\$DOCKER_HUB_PASSWORD \\
-                                SSH_KEY=\$SSH_KEY ./deploy.sh prod
-                            """
+                            sh '''
+                                chmod 600 $SSH_KEY
+                                export DOCKER_HUB_USERNAME=$DOCKER_HUB_USERNAME
+                                export DOCKER_HUB_PASSWORD=$DOCKER_HUB_PASSWORD
+                                export SSH_KEY=$SSH_KEY
+                                ./deploy.sh prod
+                            '''
                         }
                     } else {
-                        echo "🟡 Skipping deployment for branch: ${branch}"
+                        echo "🟡 Skipping deployment for branch: ${env.ACTUAL_BRANCH_NAME}"
                     }
                 }
             }
