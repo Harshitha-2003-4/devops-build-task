@@ -1,24 +1,23 @@
 #!/bin/bash
 
-# Variables
-DOCKER_HUB_USERNAME="manjunathdc"
-IMAGE_NAME="devops-app"
-TAG="latest"
+set -e  # Exit on error
 
-# Build the Docker image
-echo "Building Docker image..."
+DOCKER_HUB_USERNAME="Harshithaa2003"
+IMAGE_NAME="devops-app"
+TAG="${1:-dev}"  # Use provided tag, or default to 'dev'
+
+echo "🐳 Building Docker image: $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG"
 docker build -t $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG .
 
-# Tag the image for the dev repository
-echo "Tagging image for dev repository..."
-docker tag $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG $DOCKER_HUB_USERNAME/$IMAGE_NAME:dev
+if [[ -z "$DOCKER_HUB_CREDENTIALS_USR" || -z "$DOCKER_HUB_CREDENTIALS_PSW" ]]; then
+    echo "❌ Docker credentials missing!"
+    exit 1
+fi
 
-# Login to Docker Hub using Jenkins credentials
-echo "Logging in to Docker Hub..."
-echo $DOCKER_HUB_CREDENTIALS_PSW | docker login -u $DOCKER_HUB_CREDENTIALS_USR --password-stdin
+echo "🔐 Logging into Docker Hub..."
+echo "$DOCKER_HUB_CREDENTIALS_PSW" | docker login -u "$DOCKER_HUB_CREDENTIALS_USR" --password-stdin
 
-# Push the image to Docker Hub
-echo "Pushing image to Docker Hub..."
-docker push $DOCKER_HUB_USERNAME/$IMAGE_NAME:dev
+echo "🚀 Pushing image to Docker Hub: $TAG"
+docker push $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
 
-echo "Build and push process completed successfully."
+echo "✅ Build and push done for tag: $TAG"

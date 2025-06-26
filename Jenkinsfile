@@ -12,26 +12,24 @@ pipeline {
         stage('Detect Branch') {
             steps {
                 script {
-                    env.ACTUAL_BRANCH_NAME = env.BRANCH_NAME ?: sh(
-                        script: "git rev-parse --abbrev-ref HEAD",
-                        returnStdout: true
-                    ).trim()
+                    // Force master for now to avoid "HEAD" issues
+                    env.ACTUAL_BRANCH_NAME = 'master'
                     echo "🔍 Branch Name: ${env.ACTUAL_BRANCH_NAME}"
                 }
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build & Push Docker Image') {
             steps {
-                script {
-                    sh "./build.sh ${env.ACTUAL_BRANCH_NAME}"
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_CREDENTIALS_USR', passwordVariable: 'DOCKER_HUB_CREDENTIALS_PSW')
+                ]) {
+                    sh """
+                        export DOCKER_HUB_CREDENTIALS_USR=\$DOCKER_HUB_CREDENTIALS_USR
+                        export DOCKER_HUB_CREDENTIALS_PSW=\$DOCKER_HUB_CREDENTIALS_PSW
+                        ./build.sh \${ACTUAL_BRANCH_NAME}
+                    """
                 }
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                echo "✅ Image already pushed during build.sh"
             }
         }
 
@@ -40,10 +38,15 @@ pipeline {
                 script {
                     def branch = env.ACTUAL_BRANCH_NAME
                     if (branch == 'master') {
-                        withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                        withCredentials([
+                            sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY'),
+                            usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_HUB_USERNAME', passwordVariable: 'DOCKER_HUB_PASSWORD')
+                        ]) {
                             sh """
                                 chmod 600 \$SSH_KEY
-                                ./deploy.sh prod
+                                DOCKER_HUB_USERNAME=\$DOCKER_HUB_USERNAME \\
+                                DOCKER_HUB_PASSWORD=\$DOCKER_HUB_PASSWORD \\
+                                SSH_KEY=\$SSH_KEY ./deploy.sh prod
                             """
                         }
                     } else {
