@@ -1,11 +1,12 @@
-# Use the official Nginx image as the base image
+# Use official Nginx base image
 FROM nginx:latest
 
-# Copy your application files to the Nginx HTML directory
-COPY  build/ /usr/share/nginx/html
+# Copy the build files from React into Nginx default path
+COPY build/ /usr/share/nginx/html
 
-# Expose port 80 for HTTP traffic
+# Expose default HTTP port
 EXPOSE 80
 
-# Start Nginx when the container runs
+# Run Nginx in foreground
 CMD ["nginx", "-g", "daemon off;"]
+

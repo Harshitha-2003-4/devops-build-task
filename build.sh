@@ -1,12 +1,11 @@
 #!/bin/bash
 
-set -e  # Exit on error
+set -e
 
-DOCKER_HUB_USERNAME="harshithaa2003"  # ✅ Use lowercase (as used in docker login)
+DOCKER_HUB_USERNAME="harshithaa2003"  # 🔥 lowercase only
 IMAGE_NAME="devops-app"
-TAG="${1:-dev}"  # Use provided tag, or default to 'dev'
+TAG="${1:-dev}"  # Default tag is 'dev'
 
-# Compose full Docker image tag
 IMAGE_TAG="docker.io/${DOCKER_HUB_USERNAME}/${IMAGE_NAME}:${TAG}"
 
 echo "🐳 Building Docker image: $IMAGE_TAG"
@@ -23,4 +22,4 @@ echo "$DOCKER_HUB_CREDENTIALS_PSW" | docker login -u "$DOCKER_HUB_CREDENTIALS_US
 echo "🚀 Pushing image to Docker Hub: $IMAGE_TAG"
 docker push "$IMAGE_TAG"
 
-echo "✅ Build and push done for tag: $TAG"
+echo "✅ Build and push complete!"

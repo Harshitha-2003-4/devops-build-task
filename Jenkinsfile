@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_HUB_USERNAME = 'harshithaa2003' // 🔥 use lowercase username as tested
+        DOCKER_HUB_USERNAME = 'harshithaa2003'
         DOCKER_HUB_CREDENTIALS = credentials('docker-hub-credentials')
         IMAGE_NAME = 'devops-app'
         GITHUB_CREDENTIALS = credentials('github-token')
@@ -36,7 +36,7 @@ pipeline {
             }
         }
 
-        stage('Deploy to Server') {
+        stage('Deploy to EC2 Server') {
             steps {
                 script {
                     if (env.ACTUAL_BRANCH_NAME == 'master') {
@@ -56,11 +56,11 @@ pipeline {
                                 export DOCKER_HUB_USERNAME=$DOCKER_HUB_USERNAME
                                 export DOCKER_HUB_PASSWORD=$DOCKER_HUB_PASSWORD
                                 export SSH_KEY=$SSH_KEY
-                                ./deploy.sh prod
+                                ./deploy.sh master
                             '''
                         }
                     } else {
-                        echo "🟡 Skipping deployment for branch: ${env.ACTUAL_BRANCH_NAME}"
+                        echo "🟡 Skipping deploy for non-master branch"
                     }
                 }
             }
@@ -69,10 +69,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully!"
+            echo "✅ All stages completed!"
         }
         failure {
-            echo "❌ Pipeline failed. Check the logs."
+            echo "❌ Pipeline failed!"
         }
     }
 }
