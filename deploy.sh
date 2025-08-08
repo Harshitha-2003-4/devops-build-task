@@ -1,18 +1,19 @@
 #!/bin/bash
-
 set -e
 
 DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME:-harshithaa2003}"
 DOCKER_HUB_PASSWORD="${DOCKER_HUB_PASSWORD:-}"
 IMAGE_NAME="devops-app"
 TAG="${1:-dev}"
-SERVER_IP="YOUR_EC2_PUBLIC_IP"  # 👈 Replace this with actual IP
+SERVER_IP="13.233.45.123"  # <-- replace with your APP_EC2 public IP
 SSH_KEY="$SSH_KEY"
 
 if [[ ! -f "$SSH_KEY" ]]; then
     echo "❌ SSH key not found: $SSH_KEY"
     exit 1
 fi
+
+chmod 600 "$SSH_KEY"
 
 # Add EC2 host to known_hosts to avoid SSH prompt
 echo "✅ Adding server to known_hosts..."
@@ -42,4 +43,6 @@ ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << EOF
     echo "✅ Deployment successful!"
 EOF
 
-ssh -i "$SSH_KEY" ubuntu@$SERVER_IP "sudo docker ps -f name=devops-app --format '🟢 Running: {{.Names}} - {{.Status}}'"
+ssh -i "$SSH_KEY" ubuntu@$SERVER_IP \
+    "sudo docker ps -f name=devops-app --format '🟢 Running: {{.Names}} - {{.Status}}'"
+
