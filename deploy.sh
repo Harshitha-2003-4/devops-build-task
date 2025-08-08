@@ -1,48 +1,34 @@
 #!/bin/bash
 set -e
 
-DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME:-harshithaa2003}"
-DOCKER_HUB_PASSWORD="${DOCKER_HUB_PASSWORD:-}"
-IMAGE_NAME="devops-app"
-TAG="${1:-dev}"
-SERVER_IP="13.233.45.123"  # <-- replace with your APP_EC2 public IP
-SSH_KEY="$SSH_KEY"
+BRANCH=$1
+SERVER_IP="${SERVER_IP:-13.233.45.123}"  # default if not passed
+SSH_KEY="${SSH_KEY}"
+DOCKER_HUB_USERNAME="${DOCKER_HUB_USERNAME}"
+DOCKER_HUB_PASSWORD="${DOCKER_HUB_PASSWORD}"
 
-if [[ ! -f "$SSH_KEY" ]]; then
-    echo "❌ SSH key not found: $SSH_KEY"
+if [[ -z "$SSH_KEY" || -z "$SERVER_IP" || -z "$DOCKER_HUB_USERNAME" || -z "$DOCKER_HUB_PASSWORD" ]]; then
+    echo "❌ Missing required environment variables"
     exit 1
 fi
 
-chmod 600 "$SSH_KEY"
-
-# Add EC2 host to known_hosts to avoid SSH prompt
 echo "✅ Adding server to known_hosts..."
-mkdir -p ~/.ssh
-ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts 2>/dev/null
-chmod 644 ~/.ssh/known_hosts
+ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" ubuntu@"$SERVER_IP" "echo Connected!"
 
 echo "🚀 Deploying to $SERVER_IP"
-ssh -i "$SSH_KEY" -o StrictHostKeyChecking=no ubuntu@$SERVER_IP << EOF
-    set -e
-    echo "🔄 Installing Docker if missing..."
-    sudo apt update -y && sudo apt install -y docker.io
+ssh -i "$SSH_KEY" ubuntu@"$SERVER_IP" << EOF
+    echo "🔑 Logging into Docker Hub..."
+    echo "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
 
-    echo "🔐 Logging into Docker Hub..."
-    echo "$DOCKER_HUB_PASSWORD" | sudo docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+    echo "🐳 Pulling latest Docker image..."
+    docker pull $DOCKER_HUB_USERNAME/devops-app:$BRANCH
 
-    echo "🐳 Pulling new image..."
-    sudo docker pull $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
+    echo "🛑 Removing old container (if exists)..."
+    docker rm -f devops-app || true
 
-    echo "🛑 Stopping old container..."
-    sudo docker stop devops-app || true
-    sudo docker rm devops-app || true
-
-    echo "🚀 Starting container on port 80..."
-    sudo docker run -d -p 80:80 --name devops-app $DOCKER_HUB_USERNAME/$IMAGE_NAME:$TAG
-
-    echo "✅ Deployment successful!"
+    echo "🚀 Running new container..."
+    docker run -d --name devops-app -p 80:80 $DOCKER_HUB_USERNAME/devops-app:$BRANCH
 EOF
 
-ssh -i "$SSH_KEY" ubuntu@$SERVER_IP \
-    "sudo docker ps -f name=devops-app --format '🟢 Running: {{.Names}} - {{.Status}}'"
+echo "✅ Deployment complete!"
 
